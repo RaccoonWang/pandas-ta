@@ -44,12 +44,8 @@ def psar(
         pd.DataFrame: long, short, af, and reversal columns.
     """
     # Validate
-    _length = 1
-    high = v_series(high, _length)
-    low = v_series(low, _length)
-
-    if high is None or low is None:
-        return
+    high = v_series(high)
+    low = v_series(low)
 
     paf = v_pos_default(af, 0.02) # paf is used to keep af from parameters
     af0 = v_pos_default(af0, paf)
@@ -80,8 +76,8 @@ def psar(
     # Calculate
     m = high.shape[0]
     for row in range(2, m):
-        high_ = high.iat[row]
-        low_ = low.iat[row]
+        high_ = high.iloc[row]
+        low_ = low.iloc[row]
 
         _sar = sar + af * (ep - sar)
 
@@ -92,7 +88,7 @@ def psar(
                 ep = low_
                 af = min(af + paf, max_af)
 
-            _sar = max(high.iat[row - 1], high.iat[row - 2], _sar)
+            _sar = max(high.iloc[row - 1], high.iloc[row - 2], _sar)
         else:
             reverse = low_ < _sar
 
@@ -100,14 +96,14 @@ def psar(
                 ep = high_
                 af = min(af + paf, max_af)
 
-            _sar = min(low.iat[row - 1], low.iat[row - 2], _sar)
+            _sar = min(low.iloc[row - 1], low.iloc[row - 2], _sar)
 
         if reverse:
             if tv: # handle trading view version
                 if falling:
-                    _sar = min(low.iat[row - 1], low.iat[row - 2], ep)
+                    _sar = min(low.iloc[row - 1], low.iloc[row - 2], ep)
                 else:
-                    _sar = max(high.iat[row - 1], high.iat[row - 2], ep)
+                    _sar = max(high.iloc[row - 1], high.iloc[row - 2], ep)
             else:
                 _sar = ep
 
@@ -119,12 +115,12 @@ def psar(
 
         # Separate long/short sar based on falling
         if falling:
-            short.iat[row] = sar
+            short.iloc[row] = sar
         else:
-            long.iat[row] = sar
+            long.iloc[row] = sar
 
-        _af.iat[row] = af
-        reversal.iat[row] = int(reverse)
+        _af.iloc[row] = af
+        reversal.iloc[row] = int(reverse)
 
     # Offset
     if offset != 0:
